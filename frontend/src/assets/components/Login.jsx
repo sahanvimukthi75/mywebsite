@@ -12,7 +12,7 @@ function Login ()  {
   const handleSubmit= (e)=>{
   
     e.preventDefault()
-    axios.post('http://localhost:3002/login',{name,password})
+    axios.post('http://192.168.43.90/login',{name,password})
     .then (result=>{
       console.log(result)
       if(result.data ==="success"){
