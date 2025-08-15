@@ -16,7 +16,7 @@ const Homea = () => {
 
   useEffect(() => {
     if (id) {
-      axios.get(`http://localhost:3002/homea/${id}`)
+      axios.get(`/api/gallery/${id}`)
         .then(result => {
           const post = result.data;
           setFormData({
@@ -67,14 +67,14 @@ const Homea = () => {
     });
 
     if (id) {
-      axios.put(`http://localhost:3002/update/${id}`, data)
+      axios.put(`/api/update/${id}`, data)
         .then(res => {
           console.log('Updated:', res.data);
           navigate('/details');
         })
         .catch(err => console.log(err));
     } else {
-      axios.post('http://localhost:3002/addpost', data)
+      axios.post('/api/addpost', data)
         .then(res => {
           console.log('Added:', res.data);
           navigate('/details');

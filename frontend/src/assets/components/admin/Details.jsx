@@ -9,7 +9,7 @@ function Details() {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:3002/details')
+    axios.get('/api/details')
       .then(result => setPosts(result.data))
       .catch(err => console.log(err));
   }, []);

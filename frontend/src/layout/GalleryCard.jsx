@@ -15,7 +15,7 @@ const GalleryCard = (props) => {
       <div className="space-y-4">
         <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden' }}>
           <img 
-            src={`http://localhost:3002/${props.image}`} 
+            src={`/api/${props.image}`}
             alt={props.description} 
             style={{
               width: '100%', 
