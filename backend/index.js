@@ -65,16 +65,29 @@ app.post('/', async (req, res) => {
 app.post('/addpost', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'subImages', maxCount: 10 }]), async (req, res) => {
     try {
         const { location, description } = req.body;
-        const imagePath = req.files['image'][0].path;
-        const subImagePaths = req.files['subImages'].map(f => f.path);
 
-        const newPost = await PostModel.create({ location, description, image: imagePath, subImages: subImagePaths });
+        // Safe checks for uploaded files
+        const imagePath = req.files['image'] ? req.files['image'][0].path : null;
+        const subImagePaths = req.files['subImages'] ? req.files['subImages'].map(f => f.path) : [];
+
+        if (!location || !description || !imagePath) {
+            return res.status(400).json({ error: "Location, description, and main image are required" });
+        }
+
+        const newPost = await PostModel.create({
+            location,
+            description,
+            image: imagePath,
+            subImages: subImagePaths
+        });
+
         res.json(newPost);
-    } catch(err) {
-        console.error(err);
+    } catch (err) {
+        console.error("AddPost Error:", err);
         res.status(500).json({ error: "Server Error" });
     }
 });
+
 
 // GET ALL POSTS
 app.get("/gallery", async (req, res) => {
