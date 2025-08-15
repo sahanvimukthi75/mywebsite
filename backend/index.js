@@ -8,7 +8,10 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 
 const app = express();
-app.use(express.json());
+
+// ✅ Increase JSON and URL-encoded body size limits (important for uploads)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -19,12 +22,15 @@ mongoose.connect("mongodb+srv://sahan:sahan@cluster1.phtm64z.mongodb.net/?retryW
 }).then(() => console.log("MongoDB connected"))
   .catch(err => console.error("MongoDB connection error:", err));
 
-// Multer storage setup
+// Multer storage setup with file size limit
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
-const upload = multer({ storage });
+const upload = multer({
+    storage,
+    limits: { fileSize: 50 * 1024 * 1024 } // ✅ limit to 50MB per file
+});
 
 // ------------------- Routes -------------------
 
@@ -34,15 +40,15 @@ app.post('/login', async (req, res) => {
         const { name, password } = req.body;
         const user = await UserModel.findOne({ name });
 
-        if(!user) return res.json("User not found");
+        if (!user) return res.json("User not found");
 
         const match = await bcrypt.compare(password, user.password);
-        if(!match) return res.json("Password is incorrect");
+        if (!match) return res.json("Password is incorrect");
 
-        if(user.role === "Admin") return res.json("success1");
+        if (user.role === "Admin") return res.json("success1");
         return res.json("success");
 
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         return res.status(500).json({ error: "Server Error" });
     }
@@ -55,7 +61,7 @@ app.post('/', async (req, res) => {
         const hash = await bcrypt.hash(password, 10);
         const user = await UserModel.create({ name, password: hash });
         res.json(user);
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Server Error" });
     }
@@ -66,7 +72,6 @@ app.post('/addpost', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'sub
     try {
         const { location, description } = req.body;
 
-        // Safe checks for uploaded files
         const imagePath = req.files['image'] ? req.files['image'][0].path : null;
         const subImagePaths = req.files['subImages'] ? req.files['subImages'].map(f => f.path) : [];
 
@@ -88,13 +93,12 @@ app.post('/addpost', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'sub
     }
 });
 
-
 // GET ALL POSTS
 app.get("/gallery", async (req, res) => {
     try {
         const posts = await PostModel.find();
         res.json(posts);
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Server Error" });
     }
@@ -104,9 +108,9 @@ app.get("/gallery", async (req, res) => {
 app.get("/posts/:id", async (req, res) => {
     try {
         const post = await PostModel.findById(req.params.id);
-        if(!post) return res.status(404).json({ error: "Post not found" });
+        if (!post) return res.status(404).json({ error: "Post not found" });
         res.json(post);
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Server Error" });
     }
@@ -117,7 +121,7 @@ app.delete('/delete/:id', async (req, res) => {
     try {
         const result = await PostModel.findByIdAndDelete(req.params.id);
         res.json({ message: 'Post deleted successfully', result });
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Server Error" });
     }
@@ -128,29 +132,29 @@ app.put("/update/:id", upload.fields([{ name: 'image', maxCount: 1 }, { name: 's
     try {
         const { location, description } = req.body;
         const post = await PostModel.findById(req.params.id);
-        if(!post) return res.status(404).json({ error: "Post not found" });
+        if (!post) return res.status(404).json({ error: "Post not found" });
 
         post.location = location || post.location;
         post.description = description || post.description;
 
-        if(req.files['image']) post.image = req.files['image'][0].path;
-        if(req.files['subImages']) post.subImages = req.files['subImages'].map(f => f.path);
+        if (req.files['image']) post.image = req.files['image'][0].path;
+        if (req.files['subImages']) post.subImages = req.files['subImages'].map(f => f.path);
 
         const updatedPost = await post.save();
         res.json(updatedPost);
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Server Error" });
     }
 });
 
-// Serve gallery by ID
+// GET POST IN GALLERY BY ID
 app.get("/gallery/:id", async (req, res) => {
     try {
         const post = await PostModel.findById(req.params.id);
-        if(!post) return res.status(404).json({ error: "Post not found" });
+        if (!post) return res.status(404).json({ error: "Post not found" });
         res.json(post);
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Server Error" });
     }
