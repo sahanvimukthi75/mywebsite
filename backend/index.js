@@ -5,165 +5,143 @@ const UserModel = require('./models/User');
 const PostModel = require('./models/Post');
 const multer = require('multer');
 const path = require('path');
-const bcrypt=require('bcrypt')
+const bcrypt = require('bcrypt');
 
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Serve static files from uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-mongoose.connect("mongodb+srv://sahan:sahan@cluster1.phtm64z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1", {
-   
-});
+// MongoDB connection
+mongoose.connect("mongodb+srv://sahan:sahan@cluster1.phtm64z.mongodb.net/?retryWrites=true&w=majority", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+}).then(() => console.log("MongoDB connected"))
+  .catch(err => console.error("MongoDB connection error:", err));
 
-// Set up multer for file uploads
+// Multer storage setup
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/'); // Specify the upload directory
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname); // Specify the filename
-    },
+    destination: (req, file, cb) => cb(null, 'uploads/'),
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
+const upload = multer({ storage });
 
-const upload = multer({ storage: storage });
+// ------------------- Routes -------------------
 
-app.post('/login', (req, res) => {
-    const { name, password } = req.body;
-    UserModel.findOne({ name: name })
-        .then(user => {
-            bcrypt.compare(password,user.password, (err,response)=>{
-               if(err){
-                res.json("the password is incorrect")
-               } 
-               if (user.role === "Admin") {
-                res.json("success1")
-                 } else {
-                    res.json("success")
-                    console.log(user.role)
-            }
-           
-            })         
-            
-            
-        })
-        .catch(err => res.json(err));
-});
+// LOGIN
+app.post('/login', async (req, res) => {
+    try {
+        const { name, password } = req.body;
+        const user = await UserModel.findOne({ name });
 
-app.post('/addpost', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'subImages', maxCount: 10 }]), (req, res) => {
-    const { location, description } = req.body;
-    const imagePath = req.files['image'][0].path;
-    const subImagePaths = req.files['subImages'].map(file => file.path);
-  
-    const newPost = new PostModel({
-      location,
-      description,
-      image: imagePath,
-      subImages: subImagePaths,
-    });
-  
-    newPost.save()
-      .then(post => res.json(post))
-      .catch(err => res.json(err));
-  });
+        if(!user) return res.json("User not found");
 
-  
-app.get("/gallery", (req, res) => {
-    PostModel.find()
-        .then(posts => res.json(posts))
-        .catch(err => {
-            console.error('Error fetching posts:', err);
-            res.status(501).json({ error: 'Server Error' });
-        });
-});
+        const match = await bcrypt.compare(password, user.password);
+        if(!match) return res.json("Password is incorrect");
 
-app.get("/details", (req, res) => {
-    PostModel.find()
-        .then(posts => res.json(posts))
-        .catch(err => {
-            console.error('Error fetching posts:', err);
-            res.status(501).json({ error: 'Server Error' });
-        });
-});
+        if(user.role === "Admin") return res.json("success1");
+        return res.json("success");
 
-app.get("/posts/:id", (req, res) => {
-    const id = req.params.id;
-    console.log(id);
-    PostModel.findById(id)
-      .then(post => res.json(post))
-      .catch(err => {
-        console.error('Error fetching restaurant:', err);
-        res.status(502).json({ error: ' Server Error' });
-      });
-  });
-  
-
-app.delete('/delete/:id', (req, res) => {
-    const id = req.params.id;
-    PostModel.findByIdAndDelete(id)
-      .then(result => res.json({ message: 'Restaurant deleted successfully', result }))
-      .catch(err => res.json(err));
-  });
-
-  app.put("/update/:id", upload.fields([{ name: 'image', maxCount: 1 }, { name: 'subImages', maxCount: 10 }]), (req, res) => {
-    const { id } = req.params;
-    const { location, description } = req.body;
-    let updateData = { location, description };
-    
-    if (req.files['image']) {
-        updateData.image = req.files['image'][0].path;
+    } catch(err) {
+        console.error(err);
+        return res.status(500).json({ error: "Server Error" });
     }
+});
 
-    if (req.files['subImages']) {
-        updateData.subImages = req.files['subImages'].map(file => file.path);
+// REGISTER / CREATE USER
+app.post('/', async (req, res) => {
+    try {
+        const { name, password } = req.body;
+        const hash = await bcrypt.hash(password, 10);
+        const user = await UserModel.create({ name, password: hash });
+        res.json(user);
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({ error: "Server Error" });
     }
-
-    PostModel.findById(id)
-        .then(post => {
-            if (!post) {
-                return res.status(404).json({ error: 'Post not found' });
-            }
-
-            
-            post.location = location || post.location;
-            post.description = description || post.description;
-            post.image = updateData.image || post.image;
-            post.subImages = updateData.subImages.length > 0 ? updateData.subImages : post.subImages;
-
-            // Save the updated post
-            return post.save();
-        })
-        .then(updatedPost => res.json(updatedPost))
-        .catch(err => {
-            console.error('Error updating restaurant:', err);
-            res.status(503).json({ error: ' Server Error' });
-        });
-});
-  
-
-app.get("/gallery/:id", (req, res) => {
-    const { id } = req.params;
-    PostModel.findById(id)
-      .then(post => res.json(post))
-      .catch(err => {
-        console.error('Error fetching post:', err);
-        res.status(500).json({ error: 'Server Error' });
-      });
-  });
-  
-
-app.post('/', (req, res) => {
-    const {name,password}=req.body;
-    bcrypt.hash(password,10)
-    .then(hash =>{
-        UserModel.create({name,password:hash})
-        .then(users => res.json(users))
-        .catch(err => res.json(err));
-
-    }) .catch(err =>console.log(err.message))
-   
 });
 
-app.listen(5000, '0.0.0.0', () => {
-    console.log("server is running on port 5000");
+// ADD POST
+app.post('/addpost', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'subImages', maxCount: 10 }]), async (req, res) => {
+    try {
+        const { location, description } = req.body;
+        const imagePath = req.files['image'][0].path;
+        const subImagePaths = req.files['subImages'].map(f => f.path);
+
+        const newPost = await PostModel.create({ location, description, image: imagePath, subImages: subImagePaths });
+        res.json(newPost);
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({ error: "Server Error" });
+    }
 });
+
+// GET ALL POSTS
+app.get("/gallery", async (req, res) => {
+    try {
+        const posts = await PostModel.find();
+        res.json(posts);
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// GET POST BY ID
+app.get("/posts/:id", async (req, res) => {
+    try {
+        const post = await PostModel.findById(req.params.id);
+        if(!post) return res.status(404).json({ error: "Post not found" });
+        res.json(post);
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// DELETE POST
+app.delete('/delete/:id', async (req, res) => {
+    try {
+        const result = await PostModel.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Post deleted successfully', result });
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// UPDATE POST
+app.put("/update/:id", upload.fields([{ name: 'image', maxCount: 1 }, { name: 'subImages', maxCount: 10 }]), async (req, res) => {
+    try {
+        const { location, description } = req.body;
+        const post = await PostModel.findById(req.params.id);
+        if(!post) return res.status(404).json({ error: "Post not found" });
+
+        post.location = location || post.location;
+        post.description = description || post.description;
+
+        if(req.files['image']) post.image = req.files['image'][0].path;
+        if(req.files['subImages']) post.subImages = req.files['subImages'].map(f => f.path);
+
+        const updatedPost = await post.save();
+        res.json(updatedPost);
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// Serve gallery by ID
+app.get("/gallery/:id", async (req, res) => {
+    try {
+        const post = await PostModel.findById(req.params.id);
+        if(!post) return res.status(404).json({ error: "Post not found" });
+        res.json(post);
+    } catch(err) {
+        console.error(err);
+        res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// ------------------- Start Server -------------------
+app.listen(5000, '0.0.0.0', () => console.log("Backend running on port 5000"));
