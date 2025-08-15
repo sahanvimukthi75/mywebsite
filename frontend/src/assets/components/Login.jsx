@@ -12,7 +12,7 @@ function Login ()  {
   const handleSubmit= (e)=>{
   
     e.preventDefault()
-    axios.post('/api/login',{name,password})
+    axios.post('/api/login', { name, password })
     .then (result=>{
       console.log(result)
       if(result.data ==="success"){

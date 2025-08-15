@@ -165,5 +165,5 @@ app.post('/', (req, res) => {
 });
 
 app.listen(5000, '0.0.0.0', () => {
-    console.log("server is running on port 3002");
+    console.log("server is running on port 5000");
 });
