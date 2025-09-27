@@ -9,7 +9,7 @@ const GalleryDetail = () => {
   const [post, setPost] = useState(null);
 
   useEffect(() => {
-    axios.get(`http://localhost:3002/gallery/${id}`)
+    axios.get(`http://localhost:5000/gallery/${id}`)
       .then(result => setPost(result.data))
       .catch(err => console.log(err));
   }, [id]);
