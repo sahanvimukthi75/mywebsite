@@ -9,7 +9,7 @@ const DetailCard = ({ id, image, location, description }) => {
   const navigate = useNavigate();
 
   const handleDelete = (id) => {
-    axios.delete(`/api/delete/${id}`)
+    axios.delete(`http://localhost:5000/delete/${id}`)
       .then(res => {
         console.log(res);
         onDelete(id);
@@ -34,7 +34,7 @@ const DetailCard = ({ id, image, location, description }) => {
       <div className="space-y-4">
         <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden' }}>
           <img 
-            src={`/api/${image}`}
+            src={`http://localhost:5000/${image}`}
             alt={description} 
             style={{
               width: '100%', 
