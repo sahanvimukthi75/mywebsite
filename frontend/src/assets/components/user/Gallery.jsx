@@ -8,7 +8,7 @@ function Gallery() {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:3002/gallery')
+    axios.get('http://localhost:5000/gallery')
       .then(result => setPosts(result.data))
       .catch(err => console.log(err));
   }, []);
