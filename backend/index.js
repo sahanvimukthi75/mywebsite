@@ -15,14 +15,12 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// MongoDB connection
-mongoose.connect("mongodb+srv://sahan:sahan@cluster1.phtm64z.mongodb.net/?retryWrites=true&w=majority", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-}).then(() => console.log("MongoDB connected"))
-  .catch(err => console.error("MongoDB connection error:", err));
+// ------------------- MongoDB connection (Local) -------------------
+mongoose.connect("mongodb+srv://sahan:sahan@cluster1.phtm64z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster1")
+    .then(() => console.log("✅ MongoDB connected locally"))
+    .catch(err => console.error("❌ MongoDB connection error:", err));
 
-// Multer storage setup with file size limit
+// ------------------- Multer storage setup -------------------
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
@@ -161,4 +159,4 @@ app.get("/gallery/:id", async (req, res) => {
 });
 
 // ------------------- Start Server -------------------
-app.listen(5000, '0.0.0.0', () => console.log("Backend running on port 5000"));
+app.listen(5000, () => console.log("🚀 Backend running on http://127.0.0.1:5000"));
