@@ -9,7 +9,7 @@ const DetailCard = ({ id, image, location, description }) => {
   const navigate = useNavigate();
 
   const handleDelete = (id) => {
-    axios.delete(`http://localhost:5000/delete/${id}`)
+    axios.delete(`http://54.89.169.194:5000/delete/${id}`)
       .then(res => {
         console.log(res);
         onDelete(id);
