@@ -159,4 +159,5 @@ app.get("/gallery/:id", async (req, res) => {
 });
 
 // ------------------- Start Server -------------------
-app.listen(5000, '0.0.0.0' () => console.log("🚀 Backend running on http://127.0.0.1:5000"));
+app.listen(5000, '0.0.0.0', () => console.log("🚀 Backend running on http://0.0.0.0:5000"));
+
