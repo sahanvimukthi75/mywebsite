@@ -12,7 +12,12 @@ const app = express();
 // ✅ Increase JSON and URL-encoded body size limits (important for uploads)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(cors());
+const cors = require('cors');
+app.use(cors({
+  origin: '*', // or  S3 frontend URL
+  methods: ['GET','POST']
+}));
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ------------------- MongoDB connection (Local) -------------------
