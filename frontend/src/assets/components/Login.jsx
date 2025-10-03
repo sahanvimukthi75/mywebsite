@@ -56,7 +56,7 @@ function Login ()  {
       }}> 
         <form onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="username">Enter  Name:</label>
+            <label htmlFor="username">Enter your Name:</label>
             <input 
               type="text" 
               id="username" 
