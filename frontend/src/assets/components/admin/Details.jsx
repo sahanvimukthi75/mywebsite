@@ -9,7 +9,7 @@ function Details() {
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/gallery')
+    axios.get('http://54.89.169.194:5000/gallery')
       .then(result => setPosts(result.data))
       .catch(err => console.log(err));
   }, []);
