@@ -12,7 +12,7 @@ function Register ()  {
   const handleSubmit= (e)=>{
   
     e.preventDefault()
-    axios.post('http://localhost:5000/', { name, password })
+    axios.post('http://54.89.169.194:5000/', { name, password })
     .then (result=>{console.log(result)
     navigate('/login')
   
