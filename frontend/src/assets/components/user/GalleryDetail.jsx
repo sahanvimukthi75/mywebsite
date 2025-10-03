@@ -9,7 +9,7 @@ const GalleryDetail = () => {
   const [post, setPost] = useState(null);
 
   useEffect(() => {
-    axios.get(`http://localhost:5000/gallery/${id}`)
+    axios.get(`http://54.89.169.194:5000/gallery/${id}`)
       .then(result => setPost(result.data))
       .catch(err => console.log(err));
   }, [id]);
@@ -23,12 +23,12 @@ const GalleryDetail = () => {
       <h2 className='mt-20 mb-20 text-3xl '>More Images</h2>
 
       <div className="flex flex-wrap gap-4 justify-center">
-      <img src={`http://localhost:3002/${post.image}`}  className="w-full lg:w-1/5 p-5 shadow-[rgba(0,_0,_0,_0.24)_0px_3px_8px] rounded-lg"/>
+      <img src={`http://54.89.169.194:5000/${post.image}`}  className="w-full lg:w-1/5 p-5 shadow-[rgba(0,_0,_0,_0.24)_0px_3px_8px] rounded-lg"/>
         {post.subImages.map((subImage, index) => (
           <div key={index} className="w-full lg:w-1/5 p-5 shadow-[rgba(0,0,0,0.24)_0px_3px_8px] rounded-lg">
            
             <img 
-              src={`http://localhost:3002/${subImage}`} 
+              src={`http://54.89.169.194:5000/${subImage}`} 
 
               alt={`Sub Image ${index + 1}`} 
               style={{ width: '100%', height: 'auto', borderRadius: '8px' }} 
