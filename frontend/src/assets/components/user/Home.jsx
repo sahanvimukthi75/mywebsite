@@ -28,7 +28,7 @@ const Home = () => {
   return (
 
     <div className={containerClassName}>
-      <h1 className='h1'>Every Memories With You....</h1>
+      <h1 className='h1'>Every Memories  ....</h1>
       <p className='paragraph'>Lorem ipsum dolor, sit amet consectetur adipisicing elit.<br/>
         Illo fugit accusantium est doloribus asperiores dolore iure laudantium </p>
       <Navbar/>
