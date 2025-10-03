@@ -1,6 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
 const UserModel = require('./models/User');
 const PostModel = require('./models/Post');
 const multer = require('multer');
