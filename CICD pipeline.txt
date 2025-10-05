@@ -1,0 +1,94 @@
+pipeline {
+    agent any
+
+    environment {
+        REGION = 'us-east-1'
+        ECR_REPO = '560615485917.dkr.ecr.us-east-1.amazonaws.com/mern-backend'
+        S3_BUCKET = 'sahan-jenkin-user'
+        FRONTEND_DIR = 'frontend'
+        BACKEND_DIR = 'backend'
+    }
+
+    stages {
+        stage('Clone Repo') {
+            steps {
+                git branch: 'main', url: 'https://github.com/sahanvimukthi75/mywebsite.git'
+            }
+        }
+
+        stage('Build Backend Docker') {
+            steps {
+                dir("${env.BACKEND_DIR}") {
+                    sh 'docker build -t mern-backend:latest .'
+                }
+            }
+        }
+
+        stage('Login to ECR') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh '''
+                        aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                        aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                        aws configure set default.region $REGION
+                        aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ECR_REPO
+                    '''
+                }
+            }
+        }
+
+        stage('Push Backend Docker') {
+            steps {
+                dir("${env.BACKEND_DIR}") {
+                    sh '''
+                        docker tag mern-backend:latest $ECR_REPO:latest
+                        docker push $ECR_REPO:latest
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy Frontend to S3') {
+            steps {
+                dir("${env.FRONTEND_DIR}") {
+                    withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                        sh '''
+                            npm install
+                            npm run build
+                            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                            aws configure set default.region $REGION
+                            aws s3 sync dist/ s3://$S3_BUCKET --delete
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Run Backend Container') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'aws-creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh '''
+                        # Stop and remove existing container if running
+                        docker rm -f mern-backend || true
+                        
+                        # Pull the latest image from ECR
+                        docker pull $ECR_REPO:latest
+                        
+                        # Run the container
+                        docker run -d -p 5000:5000 --name mern-backend $ECR_REPO:latest
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished.'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
